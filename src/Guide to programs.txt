@@ -1,0 +1,30 @@
+As of 2018-05-14
+
+blank.exe
+Creates a blank file lasting 1 second with small 44 byte header
+
+noise.exe
+Straight forward noise generation program
+
+plusminusv3-starter.exe
+Noise generation program but you can specify the minimum and maximum values and the percentage of the file to deviate from 0.
+
+plusminusv3.exe
+Changes a set percentage of the values in a given file up or down by a specified amount
+
+rarity-generator-v1.el
+First version of the algorithm - now superceded
+
+rarity-generator-v2-cycle.el
+This was designed so that I could cycle through different mp3 settings, but this turned out not to work well.
+
+rarity-generator-v3.el
+
+rarity-generator-v4.el
+Cleaned up version of the code
+
+splicer.exe
+This splices a random chunk of file 2 into file 1 and outputs a new file consisting of this.
+
+splicer-fixed.exe
+This does a similar thing to splicer, but, instead you can specify the maximum and minimum percentage of the file to copy.  This basically swaps the same size chunk between two files and outputs two new files. 
