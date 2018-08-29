@@ -1,15 +1,19 @@
-/*This code generates 1 second noise as a mono  16bit 44100Hz wav file*/
-/* when called from the command line, it needs to have one argument:
-the output filename, missing the file extension (this is added automatically)*/
+/*noise-generator.exe output_file_name random_seed maximum_change
+Generates a 1 second file of noise and the maximum and minimum values can be specified. 
+This program takes four arguments when called via the command line:
+- [1] output file name
+- [2] length of file in samples (44100 = 1 second)
+- [2] random seed
+- [3] maximum change in integer values.  (maximum 32652)
+        This is the maximum absolute value of any integer
+        e.g. 8 would allow an integer to change by up to +8 or -8.  
 
-/* make_wav.c
- * Creates a WAV file from an array of ints.
- * Output is monophonic, signed 16-bit samples
- * copyright
- * Fri Jun 18 16:36:23 PDT 2010 Kevin Karplus
- * Creative Commons license Attribution-NonCommercial
- *  http://creativecommons.org/licenses/by-nc/3.0/
- */
+To generate a file of pure white noise, write: 
+noise-generator.exe outputfile.wav 734 32652
+
+To generate a blank file, write: 
+noise-generator.exe outputfile.wav 523 0 */
+
 
 #include <stdio.h>
 #include <assert.h>
@@ -17,6 +21,13 @@ the output filename, missing the file extension (this is added automatically)*/
 #include <stdlib.h>
 #include "make_wav.h"
 #include <time.h>
+
+/* The write_little_endian and write_wav functions as well as make_wav.h are taken from 
+ * Kevin Karplus's make_wav.c code
+ * Fri Jun 18 16:36:23 PDT 2010 
+ * Creative Commons license Attribution-NonCommercial
+ *  http://creativecommons.org/licenses/by-nc/3.0/
+  */
 
 void write_little_endian(unsigned int word, int num_bytes, FILE *wav_file)
 {
@@ -78,96 +89,57 @@ void write_wav(char * filename, unsigned long num_samples, short int * data, int
 
 /* My code*/
 
-#define S_RATE  (44100)
-#define BUF_SIZE (S_RATE*1) /* x second buffer */
-#define BitRate (65536)
-#define HEADER_SIZE (22) // this is the header size (actually 44 bytes, but in 22 8 byte blocks)
-#define FILE_SIZE (BUF_SIZE+HEADER_SIZE)
-
-
 int rnd(int range);
 void seedrnd(void);
 int randshuffler(int pool, int total);
 
-/*This main function takes four arguments when called via the command line:
-- [1] output file name
-- [2] random seed
-- [3] Percentage chance of value changing (out of 100) (int)
-- [4] maximum change in integer values.  (maximum 32652)
-        This is the maximum amount a integer can be moved up or down.  
-        Thus 8 would allow an integer to change by +8 or -8.   */
+#define S_RATE  (44100)
+#define BitRate (65536)
+#define HEADER_SIZE (22) // this is the header size (actually 44 bytes, but in 22 8 byte blocks)
 
 int main(int argc, char* argv[])
 {
-     // This has been optimized for speed.
-     int i,k,l,buff_find;
-     int start_pos, end_pos, pos_diff, size, start_seek;
-     char inname1[40], outname[40];
-     short int newbuffer[BUF_SIZE];
-     int pos,randseed;
-     float minpercent, maxpercent;
-     int percentval, chance_of_change,change_chance,random_change_var, random_change;
-     int top_value, top_distance, bottom_value, bottom_distance, lowest_random, newval;
-     short int currentval;
+     int k,l,randseed,random_change_var, random_change, newval;
+     char outname[40];
 
+    int buf_size = atoi(argv[2]);
+    int file_size = (buf_size+HEADER_SIZE);
+    short int newbuffer[buf_size];
 
-     //sprintf(inname1, "%s",argv[1]);
      sprintf(outname, "%s",argv[1]);
-
-    // FILE * infile1 = fopen(inname1, "rb");
      FILE * outfile = fopen(outname, "wb");
 
-     if(argc<5)
-     {
-          printf("Error: Not enough variables! (%i)", argc);
-     }
-     else if (argc>5)
-     {
-          printf("Error: Too many variables (%i)!", argc);
-     }
+     if(argc<5) {printf("Error: Not enough variables! (%i)", argc);}
+     else if (argc>5)  { printf("Error: Too many variables (%i)!", argc); }
      else
      {
-          randseed = atoi(argv[2]);
-         chance_of_change = atoi(argv[3]);
-          random_change_var = atoi(argv[4]);
-          srand(randseed);
-          // This is the part of the file removed from FILE 2
+        randseed = atoi(argv[3]);
+        random_change_var = atoi(argv[4]);
+        srand(randseed);
 
-         
-
-         // Copy all of file to buffer1in
-         //fread(bufferin1, sizeof(short int), FILE_SIZE,infile1);
-
-         for(k=HEADER_SIZE;k<FILE_SIZE;k++)
+         for(k=HEADER_SIZE;k<file_size;k++)
          {
               l = k-HEADER_SIZE;
-            //random change variable:
-            //change_chance = randshuffler(7,100);
-
             //The new value moved up or down a random amount:
-            random_change = randshuffler(7,(2*random_change_var))-random_change_var;
-            newval = 0 + random_change;
+            if(random_change_var == 0) { 
+                newval = 0;
+            }
+            else {
+                random_change = randshuffler(7,(2*random_change_var))-random_change_var;    
+                newval = 0 + random_change;
+            }  
             newbuffer[l] = (short int)(newval);   
-
          }
-
-         write_wav(outname, BUF_SIZE, newbuffer, S_RATE);
+         write_wav(outname, buf_size, newbuffer, S_RATE);
          printf("\nWrote: %s\n",outname);
-
-          // cleanup
-          //if (infile1) { fclose(infile1); }
      }
-
      return(0);
 }
 
 /*creates an entropy pool to make the randomness more random*/
 int randshuffler(int pool, int total)
 {
-     int z;
-     int randbuff[pool];
-     int randmid;
-     int randout;
+     int z, randbuff[pool], randmid, randout;
 
      for(z=0;z<pool;z++)
      {
@@ -182,10 +154,7 @@ int randshuffler(int pool, int total)
 It is designed for  */
 int rnd(int range)
 {
-     int r1;
-     int r2;
-     int rtotal;
-
+     int r1, r2, rtotal;
      r1=rand();
      r2=rand();
      rtotal=(r1+r2)%range;
