@@ -376,8 +376,10 @@ This program allows for defining the maximum values for the starting noise files
 
 ;-------------------------------------------------
 ;-------------------------------GLOBAL VARIABLES AND FILE LOCATIONS -------------------
-;First, define the folder locations
-(setq main-folder "c:/users/david/documents/raritygenerator/2018-06-21_generation/")
+					;First, define the folder locations
+(setq root-folder "c:/users/david/desktop/compression-project/rarity-algorithm/")
+
+(setq main-folder "c:/users/david/desktop/compression-project/rarity-algorithm/generations/2018-08-29/")
 ;Here is your noise making .exe:
 (setq parent-noise-address "c:/users/david/documents/raritygenerator/code/plusminusv3-starter.exe")
 ;Here is your plusminus mutation .wav file making .exe:
