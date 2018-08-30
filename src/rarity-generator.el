@@ -1,10 +1,8 @@
 					;-*-Lisp-*-
 ; TODO 2018-08-30
-; 1. make number-of-top-scorers a percentage
 ; 2. set up a expected output variable so that you know how many files will be created.
 ; 3. Try implementing a large-scale genetic algorithm to control all the parameters.
 ; --- base it on cycles of 3 iterations with a particular setting that is then changed and the parameters ranked according to effectiveness.
-; 4. separate the two mutations which are grouped together so they can be altered separately.
 
 ; Rare-Item Sound Synthesis Algorithm
 
@@ -43,9 +41,9 @@
   (save-current-buffer
     (set-buffer "log.txt")
     (newline)
-    (insert (format "Generation: %s Best File Size: %s \t Time Taken: %s seconds \t Batch Progress: %s/%s mp3 size: min %s max %s"
+    (insert (format "Generation: %s Best File Size: %s \t Time Taken: %s seconds \t Batch Progress: %s/%s \t mp3 size: min %s max %s \t No. of Files: %s"
 		    (- gen-number 1) (nth 0 (nth 0 survivors)) gen-time (- iteration-counter 1) no-of-iterations
-		    minfilesize maxfilesize
+		    minfilesize maxfilesize (expected-output)
 		    ))
     (write-file (format "%slog.txt" folder))
     (sit-for 0)
@@ -83,7 +81,7 @@ for the global variable [previously-run]."
 			  (if (equal (string-prefix-p prefix x) t)
 			      (progn
 				(setf high-generation (string-to-number (nth 1 (split-string x "[-]"))))
-				(if (> high-generation previously-run)
+				(if (> high-generation run-check)
 				    (setf run-check high-generation)
 				  )
 				)
@@ -127,7 +125,33 @@ for the global variable [previously-run]."
       )
     )
     
+(defun expected-output ()
+  "Calculates the number of files that will be created for a given generation."
+  (let
+      (
+       (no-of-parents (+ number-of-offspring-survivors randomly-generated-files-per-generation))
+       (no-of-plus-minus)
+       (no-of-file-combs)
+       (no-of-splicer)
+       (no-of-swapper)
+       )
+					;plus-minus
+    (setf no-of-plus-minus (* no-of-parents mutator-plus-minus-repeats))
+    ;splicer
+    (setf no-of-file-combs (* (apply '+ (number-sequence 1 (- no-of-parents 1))) 2))
+    (setf no-of-splicer (* no-of-file-combs mutator-splicer-repeats))
+    (setf no-of-swapper (* no-of-file-combs mutator-swapper-repeats 2))
+    (print (format "parents: %s file combinations: %s plus-minus: %s splicer: %s swapper: %s"
+		   no-of-parents
+		   no-of-file-combs
+		   no-of-plus-minus
+		   no-of-splicer
+		   no-of-swapper))
 
+    (+ no-of-parents no-of-plus-minus no-of-splicer no-of-swapper)
+    )
+  )
+  
 ;-----------------------------MP3 FUNCTIONS --------------------------
   (defun mp3-sizes (folder)
     "Returns a series of lists with info about the mp3 files in [folder] and their sizes.
@@ -287,52 +311,15 @@ for the global variable [previously-run]."
 
 ;--------------------------------------------
 ;HOW MANY TIMES SHOULD THE ALGORITHM BE RUN?
-(setq no-of-iterations 3)
-;-------------------------------------------------
-;-------------------------------GLOBAL VARIABLES AND FILE LOCATIONS -------------------
-;FOLDER LOCATIONS
-(setq root-folder "c:/users/david/desktop/compression-project/rarity-algorithm")
-(setq main-folder (format "%s/generations/2018-08-29/" root-folder))
+  (setq no-of-iterations 10)
+  (progn 
+    (load "C:/Users/David/Desktop/compression-project/rarity-algorithm/src/parameters.el")
+    (print (format "Expected Output: %s" (expected-output)))
+    )
 
-;Define the addresses of the different external .exe's
-;GENERATORS
-(setq generator-noise-address (format "%s/build/generator_noise.exe" root-folder))
-;MUTATORS 
-(setq plusminus-address (format "%s/build/mutator_plus-minus.exe" root-folder))
-(setq splicer-address (format "%s/build/mutator_splicer.exe" root-folder))
-(setq swapper-address (format "%s/build/mutator_swapper.exe" root-folder)) 
-;MP3 Settings
-; Location of LAME Audio Encoder exe:
-(setq lame-location (format "%s/build/lame/lame.exe" root-folder))
-;Number leading zeroes on folder titles
-(setq title-length 8)
-
-; Number of starting noise files
-(setq starting-noise-files 3)
-; Maximum deviation from 0 in parent files
-(setq maximum-parent-values 16384)
-; Number of files carried over to next generation
-(setq number-of-offspring-survivors 7)
-; Number of top scoring files carried forward, the rest will be randomly selected from the other values
-(setq number-of-top-scorers 3) ;IMPORTANT - THIS MUST BE SMALLER THAN number-of-offspring-survivors - MAYBE TRANSFORM INTO PERCENTAGE?
-;Number of randomly-generated files each generation
-(setq randomly-generated-files-per-generation 1)
+(setq number-of-top-scorers (round (* (float number-of-offspring-survivors) (/ percentage-of-top-scorers 100.0))))
 
 
-;PLUS MINUS
-(setq mutator-plus-minus-chance-of-value-changing 50) ; Chance of an individual value in the file being changed (a percentage out of 100)
-(setq mutator-plus-minus-minimum-value-change 200)
-(setq mutator-plus-minus-maximum-value-change 1000); maximum amount + or - a value can be changed by
-(setq mutator-plus-minus-repeats 2) ; amount of times to re-run the splicer code over all files.
-
-;SPLICER
-(setq mutator-splicer-minimum 40) ;minimum_size - minimum percentage of file to copy
-(setq mutator-splicer-maximum 60) ;maximum_size - maximum percentage of file to copy
-(setq mutator-splicer-repeats 2) ; amount of times to re-run the plus-minus code over all files.
-;SWAPPER
-(setq mutator-swapper-minimum 40) ;minimum_size - minimum percentage of file to copy
-(setq mutator-swapper-maximum 60) ;maximum_size - maximum percentage of file to copy
-(setq mutator-swapper-repeats 2) ; amount of times to re-run the swapper code over all files.
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -458,17 +445,18 @@ for the global variable [previously-run]."
 ;---------------------MUTATION 1 --------------------------------
 ;------------------PLUS-MINUS---------------------------------
 ;Takes in an input .wav file (input_file_name) and adjusts values in the file be a random amount up or down.  Then outputs this adjusted file (output_file_name).  Changes a set percentage of the values in a given file up or down by a specified amount.
-;mutator_plus-minus.exe input_file_name output_file_name random_seed percentage_chance_of_value_changing maximum_change_of_value     
+;mutator_plus-minus.exe input_file_name output_file_name random_seed percentage_chance_of_value_changing minimum_change_of_value maximum_change_of_value     
 
+     
        (dotimes (num mutator-plus-minus-repeats loop-val)
 	 (mapcar (function (lambda (z)
-			     (shell-command (format "%s %s %s.wav %s %s %s"
+			     (shell-command (format "%s %s %s.wav %s %s %s %s"
 						    plusminus-address ; executable location
 						    z ;input_file_name
 						    (number-to-string file-counter) ;output_file_name
 						    (random 60000) ;random seed
 						    mutator-plus-minus-chance-of-value-changing ; percentage_chance_of_value_changing
-						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
+						    mutator-plus-minus-minimum-value-change ;maximum_change_of_value
 						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
 						    ))
 			     (setq file-counter (+ file-counter 1))
@@ -476,19 +464,16 @@ for the global variable [previously-run]."
 	 )
        
 
-;---------------------MUTATION 2 and 3 --------------------------------
-;------------------ SPLICER AND SWAPPER ---------------------------------
+;---------------------MUTATION 2--------------------------------
+;------------------ SPLICER ---------------------------------
      
 ;Generates a list with all possible 2-file combinations of these files
 ;This is saved in the variable file-match
      (setf file-match (file-matcher file-list))
 
-
-;mutator_splicer.exe input_file_name_1 input_file_name_2 output_file_name random_seed minimum_size maximum_size
-     (mapcar (function (lambda (z)
-					;SPLICER
-			 (setf loop-val 0)
-			 (dotimes (num mutator-splicer-repeats loop-val)
+     (setf loop-val 0)
+     (dotimes (num mutator-splicer-repeats loop-val)
+       (mapcar (function (lambda (z)
 			   (shell-command (format "%s %s %s %s.wav %s %s %s"
 						  splicer-address ; location of executable
 						  (nth 0 z) ;input_file_name_1
@@ -500,10 +485,14 @@ for the global variable [previously-run]."
 						  )
 					  )
 			   (setq file-counter (+ file-counter 1))
-			   )
-					;SWAPPER
-			 (setf loop-val 0)
-			 (dotimes (num mutator-swapper-repeats loop-val)
+			   )) file-match)
+       )
+
+;---------------------MUTATION 3--------------------------------
+;------------------ SWAPPER ---------------------------------
+     (setf loop-val 0)
+     (dotimes (num mutator-swapper-repeats loop-val)
+       (mapcar (function (lambda (z)
 			   (shell-command (format "%s %s %s %s.wav %s.wav %s %s %s"
 						  swapper-address ; location of executable
 						  (nth 0 z) ;input_file_name_1
@@ -516,8 +505,8 @@ for the global variable [previously-run]."
 						  )
 					  )
 			   (setq file-counter (+ file-counter 2))
-			   )
-			 )) file-match)
+			   )) file-match)
+       )
      )
      
 ;---------------------------------------------------------------------
