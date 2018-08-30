@@ -335,10 +335,6 @@ for the global variable [previously-run]."
 (setq mutator-swapper-repeats 2) ; amount of times to re-run the swapper code over all files.
 
 
-
-;
-
-
 ;--------------------------------------------------------------------------------------------------
 ;------------------------------PREPARE THE FOLDER FOR WRITING AND SET UP THE LOG FILE.------------
 
@@ -472,6 +468,7 @@ for the global variable [previously-run]."
 						    (number-to-string file-counter) ;output_file_name
 						    (random 60000) ;random seed
 						    mutator-plus-minus-chance-of-value-changing ; percentage_chance_of_value_changing
+						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
 						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
 						    ))
 			     (setq file-counter (+ file-counter 1))

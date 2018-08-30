@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
             newbuffer[l] = (short int)(newval);   
          }
          write_wav(outname, buf_size, newbuffer, S_RATE);
-         printf("\nWrote: %s\n",outname);
+         printf("\nWrote: %s",outname);
      }
      return(0);
 }
