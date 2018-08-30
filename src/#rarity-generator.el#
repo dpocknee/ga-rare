@@ -576,5 +576,5 @@ for the global variable [previously-run]."
 ;--------------------------------------------------
 ;-------------------RUN HERE----------------------
 
-(main-algorithm 25 "C:/Users/David/Desktop/compression-project/rarity-algorithm/src/parameters.el")
+(main-algorithm 3 "C:/Users/David/Desktop/compression-project/rarity-algorithm/src/parameters.el")
 ;This takes two parameters: the number of iterations and the location of the parameters file.
