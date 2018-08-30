@@ -1,4 +1,10 @@
 					;-*-Lisp-*-
+; TODO 2018-08-30
+; 1. make number-of-top-scorers a percentage
+; 2. set up a expected output variable so that you know how many files will be created.
+; 3. Try implementing a large-scale genetic algorithm to control all the parameters.
+; --- base it on cycles of 3 iterations with a particular setting that is then changed and the parameters ranked according to effectiveness.
+; 4. separate the two mutations which are grouped together so they can be altered separately.
 
 ; Rare-Item Sound Synthesis Algorithm
 
@@ -278,19 +284,13 @@ for the global variable [previously-run]."
 (progn
 ;---NOTE: eventually have the program set up so that it can be run from the command line with only two parameters:
 ; the amount of times to run and the file containing all of the variables.
-  
-  
+
 ;--------------------------------------------
 ;HOW MANY TIMES SHOULD THE ALGORITHM BE RUN?
-
 (setq no-of-iterations 3)
-
-
-;---------------------------------
-
 ;-------------------------------------------------
 ;-------------------------------GLOBAL VARIABLES AND FILE LOCATIONS -------------------
-					;First, define the folder locations
+;FOLDER LOCATIONS
 (setq root-folder "c:/users/david/desktop/compression-project/rarity-algorithm")
 (setq main-folder (format "%s/generations/2018-08-29/" root-folder))
 
@@ -304,6 +304,8 @@ for the global variable [previously-run]."
 ;MP3 Settings
 ; Location of LAME Audio Encoder exe:
 (setq lame-location (format "%s/build/lame/lame.exe" root-folder))
+;Number leading zeroes on folder titles
+(setq title-length 8)
 
 ; Number of starting noise files
 (setq starting-noise-files 3)
@@ -312,17 +314,15 @@ for the global variable [previously-run]."
 ; Number of files carried over to next generation
 (setq number-of-offspring-survivors 7)
 ; Number of top scoring files carried forward, the rest will be randomly selected from the other values
-(setq number-of-top-scorers 3)
+(setq number-of-top-scorers 3) ;IMPORTANT - THIS MUST BE SMALLER THAN number-of-offspring-survivors - MAYBE TRANSFORM INTO PERCENTAGE?
 ;Number of randomly-generated files each generation
 (setq randomly-generated-files-per-generation 1)
-;Number leading zeroes on folder titles
-(setq title-length 8)
 
 
 ;PLUS MINUS
-(setq mutator-plus-minus-chance-of-value-changing 50) ; Chance of an individual value in the file being changed ( a percentage out of 100)
-(setq mutator-plus-minus-minimum-value-change 10000)
-(setq mutator-plus-minus-maximum-value-change 10000); maximum amount + or - a value can be changed by
+(setq mutator-plus-minus-chance-of-value-changing 50) ; Chance of an individual value in the file being changed (a percentage out of 100)
+(setq mutator-plus-minus-minimum-value-change 200)
+(setq mutator-plus-minus-maximum-value-change 1000); maximum amount + or - a value can be changed by
 (setq mutator-plus-minus-repeats 2) ; amount of times to re-run the splicer code over all files.
 
 ;SPLICER
@@ -333,10 +333,6 @@ for the global variable [previously-run]."
 (setq mutator-swapper-minimum 40) ;minimum_size - minimum percentage of file to copy
 (setq mutator-swapper-maximum 60) ;maximum_size - maximum percentage of file to copy
 (setq mutator-swapper-repeats 2) ; amount of times to re-run the swapper code over all files.
-
-
-
-;
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -472,6 +468,7 @@ for the global variable [previously-run]."
 						    (number-to-string file-counter) ;output_file_name
 						    (random 60000) ;random seed
 						    mutator-plus-minus-chance-of-value-changing ; percentage_chance_of_value_changing
+						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
 						    mutator-plus-minus-maximum-value-change ;maximum_change_of_value
 						    ))
 			     (setq file-counter (+ file-counter 1))
