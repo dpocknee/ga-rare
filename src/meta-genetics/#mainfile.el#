@@ -1,9 +1,0 @@
-					;-*-Lisp-*-
-
-
-
-(progn
-  (load "C:/Users/David/Desktop/compression-project/rarity-algorithm/src/meta-genetics/filetoread.el")
-  (sit-for 5)
-  (test-function)
-  )
